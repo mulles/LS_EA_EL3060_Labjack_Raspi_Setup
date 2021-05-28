@@ -501,17 +501,17 @@ WantedBy=multi-user.target
         
 # Setup service
 
-    - name: Enable EA_EL Measurement service
+    - name: Enable pio-remote service
       shell: systemctl enable measurement_EA-EL-3060-2Serial2Raspi2Influxdb.py.service
       register: output
     - debug: var=output.stdout_lines  
 
-    - name: Start of  EA_EL Measurement service
+    - name: Start of pio-remote service
       shell: systemctl start measurement_EA-EL-3060-2Serial2Raspi2Influxdb.py.service
       register: output
     - debug: var=output.stdout_lines  
 
-    - name: Get status of EA_EL Measurement service
+    - name: Get status of pio-remote service
       shell: systemctl status measurement_EA-EL-3060-2Serial2Raspi2Influxdb.py.service
       register: output
     - debug: var=output.stdout_lines  
