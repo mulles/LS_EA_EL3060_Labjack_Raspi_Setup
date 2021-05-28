@@ -1,0 +1,41 @@
+Source: Programming with Interface Cards (IF-U1 USB)
+
+1.6 Serial Transmission settings: Start bit + 8 Data bits + Parity bit + Stop bit -> 8-Odd-1, Baud=57600
+
+Telegram                                                               
+    SD                                                                + DN        + OBJ       + DATA      + CS
+Hex: 5                                                  5               01          47          00          9D   
+Dec: 5                                                  5               1           71          0           157
+     Transmission Type + Broad/Single-Cast + Direction  Datalength-1
+Bin: 01                  0                   1          0101           + 0000 0001 + 0100 0111 + 0000 0000 + 1001 1101
+Bit#:76                  5                   4          3210                 
+Expl:Query data          Single-Cast         PC->Device Length=5+1=6                  
+                                           
+
+Comments: 
+For Datalenght and OBJ See Object list. 
+Checksum is the quersumme 
+
+GET_OBJ_00 = Example: 55 01 47 00 9D  (70 00 46 00 b6)
+Answer:  85 01 47 64 00 1E 00 50 00 01 9F
+
+Example: 55 01 45 00 9D
+
+GET_OBJ_00 70 00 01 00 71
+Answer:   00000000 8a 01 01 32 36 34 39 38   31 30 32 32 36 00 02 94 	.␁␁26498  10226
+                                
+Answerhex:00000000 8b 01 00 45 4c 20 33 31   36 30 2d 36 30 41 00 02 	.␁
+          00000016 db  
+          
+GET_OBJ_00:  70 00 00 00 70      
+Answer:   [13:17:51:053] <0x8b><0x01><break>
+          [13:17:51:053] EL 3160-60A<break>
+          [13:17:51:053] <0x02><0xdb>
+          
+GET_OBJ_09: 7000090079          
+Answer:              <0x8e><0x01>⇥	V5.05 02.08.12<break> 
+
+GET_69              : 70004500b5
+Answer:              <0xc0><0x01><0xff><0x08><0x01><0xc8>
+
+

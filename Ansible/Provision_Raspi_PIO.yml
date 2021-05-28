@@ -1,0 +1,589 @@
+---
+# Emile Schons - 22.04.2021
+#TODO Make IaC perfect: Put the different parts into Ansible roles Gitrepos and make everything indepodent -> goal: on second run changed=0 -> https://symfonycasts.com/screencast/ansible/idempotency-changed-when
+# based on https://www.ansible.com/blog/using-ansible-and-ansible-tower-with-shared-roles
+#Deploy the different role to the different hosts, one playbook per host.
+#Testing/Staging in a different git branche
+# Configure Raspberrypi SBC with PIO Remote Service, LJM (Labjack), SSH Reverse Service.
+#
+# Steps to prepare SDCARD with CLI for ansible provisioning (30min) 
+#   based on https://www.raspberrypi.org/documentation/configuration/wireless/headless.md
+#
+# 1.Download latest Rasperrpi OS lite: wget https://downloads.raspberrypi.org/raspbian_latest
+# 2.Write to SDCard
+# 3.Navigate to  /boot: cd /media/"$USER"/boot folder on SDCard
+# 4.Enable ssh access by executing: touch ssh
+# 5.Configure Wifi by executing: 
+#cat << EOF > wpa_supplicant.conf
+#ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+#update_config=1
+#country=DE
+
+#network={
+# ssid="PYUR D80A6"
+# psk="kRC8s5Y6nate"
+#}
+#EOF
+# 6. Enable access via ssh only
+#    Generate ssh-key: ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -C "mulles@pos-os_for_LS_RPI"
+#    sudo mkdir -m 700 /media/"$USER"/rootfs/home/pi/.ssh/ && sudo cp ~/.ssh/ls_rpi_ed25519.pub /media/"$USER"/rootfs/home/pi/.ssh/authorized_keys
+#    sudo chown -R 1000:1000 /media/"$USER"/rootfs/home/pi/.ssh/
+#    sudo gedit /media/"$USER"/rootfs/etc/ssh/sshd_config
+#    Change "#PasswordAuthentication yes" to "PasswordAuthentication no" by uncommenting
+# Same Configuration can be done with rpi-image see https://github.com/raspberrypi/rpi-imager
+
+# 7. Insert SDCard in Raspberry pi, give it some time to boot (5min?)
+# 8. Use Nmap or other tool to find it's IP in WLAN Network: nmap -n -sn 192.168.0.0/24 -oG - | awk '/Up$/{print $2}'
+# 9. Write to IP to hosts file in this Ansible Playbook directory.
+# 10. Manually Setup SSH-Keys for Reverse SSH. 
+# 11. Execute Playbook: ansible-playbook -v Provision_Raspi_PIO.yml -i hosts -u pi
+# 12. Make a Backup of the produced image: /dev/sdb sudo dd if=/dev/mmcblk0 of=~/raspbian_backup_lsserver20210423.img
+
+
+- name: Configure Raspberrypi SBC with PIO Remote Service, LJM (Labjack), SSH Reverse Service.
+  
+  hosts: [raspi-prod] #Change depending on where to deploy
+  become: yes         #to excute sudo commands
+  tasks:
+  
+
+#  Setup Reverse SSH Connection 
+
+    #TODO Generate SSH-Key on Raspi
+    #    - name: Generate SSH-Key on Raspi
+    #      shell: ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -C "pi@raspberrypi_for_LS_UBER" -a 100
+    #      register: output
+    #    - debug: var=output.stdout_lines  
+        
+    #TODO, needs to be done manually Copy public key to SSH Uberspace-Server over SSH : automate with this role or other solution f.i sshpass: https://github.com/ryankwilliams/ansible-ssh-copy-id/tree/    master/tasks
+
+    #    - name: Generate SSH-Key on Raspi
+    #      shell: ssh-copy-id -i ~/.ssh/id_ed25519 lsserver@lsserver.uber.space 
+    #      register: output
+    #    - debug: var=output.stdout_lines  
+  
+
+    
+
+#Setup Service
+   # you need to setup the token.
+
+    - name: Setup ssh-tunnel Service
+      copy:
+        content: |
+              [Unit]
+
+              Description=Reverse SSH connection
+              After=network.target
+
+              [Service]
+
+              Type=simple
+              User=pi
+              ExecStart=/usr/bin/ssh -vvv -g -N -T -o "ServerAliveInterval 10" -o "ExitOnForwardFailure yes" -R 40520:localhost:22 lsserver@lsserver.uber.space
+              Restart=always
+              RestartSec=5s
+
+              [Install]
+
+              WantedBy=default.target
+        dest: /etc/systemd/system/ssh-reverse-tunnel.service
+        
+    - name: Enable Ssh-tunnel Service
+      shell: systemctl enable ssh-reverse-tunnel.service
+      register: output
+    - debug: var=output.stdout_lines  
+    
+    - name: Start Ssh-tunnel Service
+      shell: systemctl start ssh-reverse-tunnel 
+      register: output
+    - debug: var=output.stdout_lines 
+    
+    - name: Look for errors of SSH-tunnel Service
+      shell: systemctl status ssh-reverse-tunnel
+      register: output
+    - debug: var=output.stdout_lines 
+  
+  
+        #TODO Automate:
+        #Port needs to be opened on lsserver.uber.space manually with:
+        #uberspace port add
+        #To connect from Server 
+        #ssh -l pi -p 40520 localhost
+        #Connect to Raspi:  
+        #ssh -p 40520 pi@lsserver.uber.space
+
+#Configuration for Plattformio connect to SWD and Serial Interface remotly via Raspberrypi
+#based on https://community.platformio.org/t/howto-raspberry-pi-3-as-remote-agent-oct-2020/16700
+#and https://docs.platformio.org/en/latest/core/userguide/remote/cmd_device.html#cmd-remote-device-monitor
+ 
+# update system
+
+    - name: Upgrade all apt packages
+      apt: upgrade=dist
+    
+     
+# install required packages
+
+    - name: Install required PIO packages
+      apt: 
+        pkg:
+         - python3-pip 
+         - libffi-dev 
+         - libssl-dev
+         - screen                   #screen for serial and processes to run when ssh logout 
+        state: present
+        
+# install platformio
+
+
+    - name: install plattformio
+      shell: pip3 install platformio
+      register: output
+    - debug: var=output.stdout_lines  
+  
+
+# install required libraries for the remote agent with pipe to ansible_out.txt to know what is going on
+
+    - name: install required librariesfor the remote agent (30min) login via ssh tail -f ansible_out.txt 
+      shell: sudo pio remote agent > ansible_out.txt 2>&1
+
+      register: output
+    - debug: var=output.stdout_lines  
+
+#Setup Service
+   # you to provide the token.
+
+    - name: Setup pio-remote Service
+      copy:
+        content: |
+              [Unit]
+              Description=pio remote agent
+              Requires=network-online.target
+              After=network-online.target
+
+              [Service]
+              Type=simple
+              User=pi
+              Group=pi
+              Environment="PLATFORMIO_AUTH_TOKEN=m6xr3mzHpF6ObmhsvtW6n4x30l+e1paynZmlWmBxlJ+UoIqbjXSnaJ+hatybxaBejnKXZruhjKGFeaVgbKhlr2zE1oxdc5Sf"
+              WorkingDirectory=/home/pi
+              ExecStart=/usr/local/bin/platformio remote agent start
+              Restart=always
+
+              [Install]
+              WantedBy=multi-user.target
+        dest: /etc/systemd/system/pio-remote.service
+        
+# Setup service
+
+    - name: Enable pio-remote service
+      shell: systemctl enable pio-remote.service
+      register: output
+    - debug: var=output.stdout_lines  
+
+    - name: Start of pio-remote service
+      shell: systemctl start pio-remote
+      register: output
+    - debug: var=output.stdout_lines  
+
+    - name: Get status of pio-remote service
+      shell: systemctl status pio-remote
+      register: output
+    - debug: var=output.stdout_lines  
+
+#Similar troubleshoot than status, more for errors: journalctl -e -t platformio     
+#did install some things manual 26.04.21: pio upgrade --dev
+#Please wait while upgrading PlatformIO ...
+
+#PlatformIO has been successfully upgraded to 5.2.0a6
+#Release notes: https://docs.platformio.org/en/latest/history.html
+#pi@raspberrypi:~ $ 
+#pi@raspberrypi:~ $ pio home
+
+
+    
+#Configuration for LabjackT7
+# based on https://labjack.com/support/app-notes/sbc/getting-started-t7-rpi3-cloud9
+
+    - name: Install required LJM packages
+      apt: 
+        pkg:
+         - unzip
+        state: present
+   
+    
+    - name: Download latest version of LJM
+      get_url: 
+        url: https://labjack.com/sites/default/files/software/LabJackM-1.1700-Raspbian-Linux-armhf.tar.gz
+        dest: ~/
+    - unarchive: 
+        src: ~/LabJackM-1.1700-Raspbian-Linux-armhf.tar.gz
+        dest: ~/
+        remote_src: yes
+    
+    - name: Run LabJackM 
+      shell: sudo ~/LabJackM-1.1700-Raspbian-Linux-armhf/LabJackM.run
+      register: output
+    - debug: var=output.stdout_lines  
+    
+    - name: Install python library for labjack
+      shell: pip3 install labjack-ljm
+      register: output
+    - debug: var=output.stdout_lines 
+  
+    
+#    - name: Download Python LJM Example Scripts 
+#      get_url: 
+#        url: https://labjack.com/sites/default/files/software/Python_LJM_2015_12_03_0.zip
+#        dest: ~/
+#    
+#    - name: Unzip file
+#      shell: unzip Python_LJM_2015_12_03_0.zip
+#      register: output
+#    - debug: var=output.stdout_lines    
+    
+#    - name:  Install LJM Python Scripts
+#      shell: cd ~/Python_LJM && sudo python3 setup.py install
+#      register: output
+#    - debug: var=output.stdout_lines 
+    
+    - name: Test python scripts
+      shell: python3 ~/Python_LJM/Examples/List_All/list_all.py
+      register: output
+    - debug: var=output.stdout_lines 
+    
+    
+    #Clean up
+    
+    - name: Clean up - Remove directory
+      file:
+        path: ~/LabJackM-1.1700-Raspbian-Linux-armhf/
+        state: absent
+    - name: Clean up - Remove tar
+      file:
+        path: ~/LabJackM-1.1700-Raspbian-Linux-armhf.tar.gz
+        state: absent
+        
+    - name: Clean up - Remove tar
+      file:
+        path: ~/Python_LJM_2015_12_03_0.zip
+        state: absent
+            
+            
+           
+
+        
+#Implement an if condition if http check return it is setup secussfully 
+
+
+# Install telegraf to monitor raspberry pi 
+  # install required packages for telegraf
+  # based on https://docs.influxdata.com/telegraf/v1.18/introduction/installation/
+
+    - name: Install required telegraf packages
+      apt: 
+        pkg:
+         - apt-transport-https 
+        state: present   
+ 
+# TODO Needs to be improved to be indepodent. 
+#    - name: Install Apt key 
+#      shell:  wget -qO- https://repos.influxdata.com/influxdb.key | sudo apt-key add -source /etc/os-release test $VERSION_ID = "10" && echo "deb https://repos.influxdata.com/debian buster stable" | sudo tee /etc/apt/sources.list.d/influxdb.list
+#      register: output
+#    - debug: var=output.stdout_lines    
+#    
+    - name: Install required telegraf packages
+      apt: 
+        pkg:
+         - telegraf
+        state: present 
+        update_cache: yes
+        
+
+#Configure telegraf
+   # you need to provide the token.
+    - name: Setup pio-remote Service
+      copy:
+        content: |
+              # Configuration for telegraf agent
+              [agent]
+                ## Default data collection interval for all inputs
+                interval = "10s"
+                ## Rounds collection interval to 'interval'
+                ## ie, if interval="10s" then always collect on :00, :10, :20, etc.
+                round_interval = true
+
+                ## Telegraf will send metrics to outputs in batches of at most
+                ## metric_batch_size metrics.
+                ## This controls the size of writes that Telegraf sends to output plugins.
+                metric_batch_size = 1000
+
+                ## For failed writes, telegraf will cache metric_buffer_limit metrics for each
+                ## output, and will flush this buffer on a successful write. Oldest metrics
+                ## are dropped first when this buffer fills.
+                ## This buffer only fills when writes fail to output plugin(s).
+                metric_buffer_limit = 10000
+
+                ## Collection jitter is used to jitter the collection by a random amount.
+                ## Each plugin will sleep for a random time within jitter before collecting.
+                ## This can be used to avoid many plugins querying things like sysfs at the
+                ## same time, which can have a measurable effect on the system.
+                collection_jitter = "0s"
+
+                ## Default flushing interval for all outputs. Maximum flush_interval will be
+                ## flush_interval + flush_jitter
+                flush_interval = "10s"
+                ## Jitter the flush interval by a random amount. This is primarily to avoid
+                ## large write spikes for users running a large number of telegraf instances.
+                ## ie, a jitter of 5s and interval 10s means flushes will happen every 10-15s
+                flush_jitter = "0s"
+
+                ## By default or when set to "0s", precision will be set to the same
+                ## timestamp order as the collection interval, with the maximum being 1s.
+                ##   ie, when interval = "10s", precision will be "1s"
+                ##       when interval = "250ms", precision will be "1ms"
+                ## Precision will NOT be used for service inputs. It is up to each individual
+                ## service input to set the timestamp at the appropriate precision.
+                ## Valid time units are "ns", "us" (or "µs"), "ms", "s".
+                precision = ""
+
+                ## Logging configuration:
+                ## Run telegraf with debug log messages.
+                debug = false
+                ## Run telegraf in quiet mode (error log messages only).
+                quiet = false
+                ## Specify the log file name. The empty string means to log to stderr.
+                logfile = ""
+
+                ## Override default hostname, if empty use os.Hostname()
+                hostname = ""
+                ## If set to true, do no set the "host" tag in the telegraf agent.
+                omit_hostname = false
+              [[outputs.influxdb_v2]]	
+                ## The URLs of the InfluxDB cluster nodes.
+                ##
+                ## Multiple URLs can be specified for a single cluster, only ONE of the
+                ## urls will be written to each interval.
+                ## urls exp: http://127.0.0.1:8086
+                urls = ["https://influxdb.lsserver.uber.space"]
+
+                ## Token for authentication.
+                token = "qaSUBtqrhsSnnZdOBx9DwqMamfF4rOnFJSUCMIB76VviPVV06ulCH_PwEnl4MG943UZaUZVpITgwpNSfI1035Q=="
+
+                ## Organization is the name of the organization you wish to write to; must exist.
+                organization = "LibreSolar"
+
+                ## Destination bucket to write into.
+                bucket = "LabjackCurrentVoltage"
+              [[inputs.cpu]]
+                ## Whether to report per-cpu stats or not
+                percpu = true
+                ## Whether to report total system cpu stats or not
+                totalcpu = true
+                ## If true, collect raw CPU time metrics.
+                collect_cpu_time = false
+                ## If true, compute and report the sum of all non-idle CPU states.
+                report_active = false
+              [[inputs.disk]]
+                ## By default stats will be gathered for all mount points.
+                ## Set mount_points will restrict the stats to only the specified mount points.
+                # mount_points = ["/"]
+                ## Ignore mount points by filesystem type.
+                ignore_fs = ["tmpfs", "devtmpfs", "devfs", "overlay", "aufs", "squashfs"]
+              [[inputs.diskio]]
+              [[inputs.mem]]
+              [[inputs.net]]
+              [[inputs.processes]]
+              [[inputs.swap]]
+              [[inputs.system]]
+        dest: /etc/telegraf/telegraf.conf
+        
+ 
+ 
+# Alternative to config file, does not exit after execution even with --quiet option, and config is not written to file for service.
+#    - name: Enable telegraf service
+#      shell: export INFLUX_TOKEN=qaSUBtqrhsSnnZdOBx9DwqMamfF4rOnFJSUCMIB76VviPVV06ulCH_PwEnl4MG943UZaUZVpITgwpNSfI1035Q== && telegraf --config https://influxdb.lsserver.uber.space/api/v2/telegrafs/076af9bee83f4000
+#      register: output
+#    - debug: var=output.stdout_lines  
+
+          
+# Setup service
+#TODO can be shortende with systemctl enable --now (enable and start (--now)) 
+    - name: Enable telegraf service
+      shell: systemctl enable telegraf
+      register: output
+    - debug: var=output.stdout_lines  
+
+    - name: Start of telegraf service 
+      shell: systemctl start telegraf
+      register: output
+    - debug: var=output.stdout_lines  
+
+    - name: Get status of telegraf service
+      shell: systemctl status telegraf
+      register: output
+    - debug: var=output.stdout_lines  
+    
+    
+    
+# Setup Python Scripts as Service to collect Measurement and send to influxdb.lsserver.uber.space
+
+#Setup Service
+   # TODO Copy to server $ ssh -p 40520  pi@lsserver.uber.space "cat ~/measurement_Nucleo64Serial2Raspi2influxdb.py" < Nucleo64Serial2Raspi2influxdb.py
+   # TODO make executable $ chmod u+x measurement_Nucleo64Serial2Raspi2influxdb.py
+   
+       
+ 
+    - name: Setup Service for Python Script with does collects Measurements collects Measurements from MPPT-1210-Hus with Nucleo64Serial (ThingSet Prot.) 
+      copy:
+        content: |
+[Unit]
+Description= Python Script collects Measurements from MPPT-1210-Hus with Nucleo64
+After=multi-user.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+ExecStart=/usr/bin/python3 /home/pi/measurement_Nucleo64Serial2Raspi2influxdb.py
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+        dest: /etc/systemd/system/measurement_Nucleo64Serial2Raspi2influxdb.py.service
+        
+
+        
+# Setup service
+
+    - name: Enable pio-remote service
+      shell: systemctl enable measurement_Nucleo64Serial2Raspi2influxdb.py.service
+      register: output
+    - debug: var=output.stdout_lines  
+
+    - name: Start of pio-remote service
+      shell: systemctl start measurement_Nucleo64Serial2Raspi2influxdb.py.service
+      register: output
+    - debug: var=output.stdout_lines  
+
+    - name: Get status of pio-remote service
+      shell: systemctl status measurement_Nucleo64Serial2Raspi2influxdb.py.service
+      register: output
+    - debug: var=output.stdout_lines  
+
+#Deploy new python script:
+   #   ssh -p 40520 pi@lsserver.uber.space "cat > ~/measurements_labjack.py" < path/local/   measurements_labjack.py
+ #   Need to reload changed service: systemctl daemon-reload
+
+
+
+
+#Ideas on show to design the reconnect script: 
+#*/5 * * * * /bin/ping -q -c10 192.168.0.1 > /dev/null 2>&1 || (/sbin/ifdown --force wlan0 ;/sbin/ifup wlan0 ;/usr/bin/logger wifi on wlan0 restarted via crontab)
+
+##!/bin/bash
+
+#while true ; do
+#	if ifconfig wlan0 | grep -q "inet addr:" ; then
+#		sleep 60
+#	else
+#		echo "Network connection down! Attempting reconnection."
+#		ifup --force wlan0
+#		sleep 10
+#	fi
+#done
+    
+# Alternative to the cronjob would bev https://wiki.archlinux.org/title/Systemd/Timers#As_a_cron_replacement   
+    
+    - name: Setup Cronjob so if wlan disconnects for any reason, the connection is reetablished (raspi does not do this by default) 
+      copy:
+        content: |
+              #!/bin/bash
+              # Author:
+              # twitter.com/pitto
+              # Source: https://unix.stackexchange.com/questions/141095/automatically-reboot-if-no-wifi-connection-for-a-certain-time
+              # HOW TO INSTALL:
+              #
+              # 1) Install ifupdown and fping with the following command:
+              # sudo apt-get install ifupdown fping
+              #
+              # 2)Then install this script into a folder and run  
+              #   chmod u+x network_check.sh
+              # 3)Add to your sudo crontab -e this row:
+              # */5 * * * * ~/network_check.sh
+              #  
+              # Note:
+              # If you want to perform automatic repair fsck at reboot
+              # remember to uncomment fsck autorepair here: nano /etc/default/rcS
+
+              # Let's clear the screen
+              clear
+
+              # Write here the gateway you want to check to declare network working or not
+              gateway_ip='www.google.com'
+
+              # Here we initialize the check counter to zero
+              network_check_tries=0
+
+              # Here we specify the maximum number of failed checks
+              network_check_threshold=5
+
+              # This function will be called when network_check_tries is equal or greather than network_check_threshold
+              function restart_wlan0 {
+                  # If network test failed more than $network_check_threshold
+                  echo "Network was not working for the previous $network_check_tries checks."
+                  # We restart wlan0
+                  echo "Restarting wlan0"
+                  sudo ip link set wlan0 down  
+                  sleep 5
+                  sudo ip link set wlan0 up
+                  sleep 60
+                  # If network is still down after recovery and you want to force a reboot simply uncomment following 4 rows
+                  host_status=$(fping $gateway_ip)
+                  if [[ $host_status != *"alive"* ]]; then
+                      reboot
+                  fi
+              }
+
+              # This loop will run network_check_tries times and if we have network_check_threshold failures
+              # we declare network as not working and we restart wlan0
+              while [ $network_check_tries -lt $network_check_threshold ]; do
+                  # We check if ping to gateway is working and perform the ok / ko actions
+                  host_status=$(fping $gateway_ip)
+                  # Increase network_check_tries by 1 unit
+                  network_check_tries=$[$network_check_tries+1]
+                  # If network is working
+                  if [[ $host_status == *"alive"* ]]; then
+                      # We print positive feedback and quit
+                      echo "Network is working correctly" && exit 0
+                  else
+                      # If network is down print negative feedback and continue
+                      echo "Network is down, failed check number $network_check_tries of $network_check_threshold"
+                  fi
+                  # If we hit the threshold we restart wlan0
+                  if [ $network_check_tries -ge $network_check_threshold ]; then
+                      restart_wlan0
+                  fi
+                  # Let's wait a bit between every check
+                  sleep 5 # Increase this value if you prefer longer time delta between checks
+              done
+        dest: ~/network_check.sh
+        
+
+    
+    
+# Raspi setup done.     
+        
+    
+    - name: Tell user Raspi Setup was successfull.  
+      debug:
+        msg: The Raspi setup has been setup sucessfully.    
+        
+        
+        
+        
+        
+        
+        

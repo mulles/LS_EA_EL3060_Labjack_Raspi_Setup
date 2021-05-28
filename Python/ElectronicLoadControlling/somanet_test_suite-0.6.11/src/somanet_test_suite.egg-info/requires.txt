@@ -1,0 +1,4 @@
+pyserial>=3.4
+crcmod
+numpy
+labjack-ljm

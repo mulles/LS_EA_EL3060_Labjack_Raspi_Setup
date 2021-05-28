@@ -1,0 +1,94 @@
+
+
+
+
+curl -i -XPOST "http://influxdb.lsserver.uber.space/write?db=mydb" --data-binary @bridges.txt
+
+How to copy files to remote with a pipe
+
+https://superuser.com/questions/291423/how-to-copy-a-file-without-using-scp-inside-an-ssh-session
+ssh -p 40520 pi@lsserver.uber.space "cat > path/to/remote/file.py" < path/to/local/file.py
+ssh -p 40520  pi@lsserver.uber.space "cat > ~/measurement_Nucleo64Serial2Raspi2influxdb.py" < Nucleo64Serial2Raspi2influxdb.py
+
+ssh -t -p 40520 pi@lsserver.uber.space pio device monitor -b 115200 --echo --filter colorize
+
+Open Terminal which is not broken on disconnect: 
+
+ssh -t -p 40520 pi@lsserver.uber.space screen "tail -f /var/log/messages"
+
+-o "LibreSolar" -b "LabjackCurrentVoltage"
+
+
+F06YjFr4ZapmwmB-_.
+
+Token 6O3aUzQNynIPhh1jwlNukYU1gx5Z2fJZNehpANlNl1rTtLsSW2Acm2rFE3mO81l2Fq_Nl8lyhqajg5ivOAzrvA==
+
+screen /dev/ttyAMA0 115200
+?output ["Bat_V"]
+
+
+
+r["_value"] 
+used_precent
+mcc
+ and r.tag == "ext4" 
+
+https://docs.influxdata.com/influxdb/cloud/query-data/flux/query-fields/
+ and r.tag == "used_precent" 
+ 
+ from(bucket: "LabjackCurrentVoltage")
+  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)
+  |> filter(fn: (r) => r._measurement == "net" and r._field == "bytes_recv" and r._field == bytes_recv "sent"  )
+
+
+
+
+
+curl -i -S -XPOST "https://influxdb.lsserver.uber.space/api/v2/delete/?org=LibreSolar&bucket=LabjackCurrentVoltage&precision=s" \
+  --header "Authorization: Token 6O3aUzQNynIPhh1jwlNukYU1gx5Z2fJZNehpANlNl1rTtLsSW2Acm2rFE3mO81l2Fq_Nl8lyhqajg5ivOAzrvA==" \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "start": "2021-01-01T00:00:00Z",
+    "stop": "2021-06-14T00:00:00Z",
+    "predicate": "_measurement=\"bridges\" "
+  }'
+
+
+influx delete --bucket LabjackCurrentVoltage  --start 2021-02-01T00:00:00Z --stop 2021-06-14T00:00:00Z --predicate '_measurement="bridges"'
+
+
+curl -S --request POST "https://influxdb.lsserver.uber.space/api/v2/write?org=LibreSolar&bucket=LabjackCurrentVoltage&precision=s" \
+  --header "Authorization: Token 6O3aUzQNynIPhh1jwlNukYU1gx5Z2fJZNehpANlNl1rTtLsSW2Acm2rFE3mO81l2Fq_Nl8lyhqajg5ivOAzrvA==" \
+  --data-raw "mem,host=host1 used_percent=23.43234543 1556896326 mem,host=host2 used_percent=26.81522361 1556896326 mem,host=host1 used_percent=22.52984738 1556896336 mem,host=host2 used_percent=27.18294630 1556896336"
+  
+  
+curl -i -S -XPOST "https://influxdb.lsserver.uber.space/api/v2/write?org=LibreSolar&bucket=LabjackCurrentVoltage&precision=s" \
+  --header "Authorization: Token 6O3aUzQNynIPhh1jwlNukYU1gx5Z2fJZNehpANlNl1rTtLsSW2Acm2rFE3mO81l2Fq_Nl8lyhqajg5ivOAzrvA==" \
+  --data-raw "
+measurement,device=labjackT7 used_percent=23.43 1556896326
+measurement,device=labjackT7 used_percent=26.81 1556896323
+measurement,device=labjackT7 used_percent=22.52 1556896335
+measurement,device=labjackT7 used_percent=27.18 1556896336
+"
+
+measurement,tag1=string,tag2=string<space>field1=any,field2=any<space>TIMESTAMP
+
+curl -i -S -XPOST "https://influxdb.lsserver.uber.space/api/v2/write?org=LibreSolar&bucket=LabjackCurrentVoltage&precision=s"   --header "Authorization: Token 6O3aUzQNynIPhh1jwlNukYU1gx5Z2fJZNehpANlNl1rTtLsSW2Acm2rFE3mO81l2Fq_Nl8lyhqajg5ivOAzrvA=="   --data-binary @bridges.txt
+
+
+
+Sensor,type=Sensor_Current_LTS15 HallVoltage=5      1618920857
+Sensor,type=Sensor_Voltage_Divider DivVoltage=12.8  1618920860
+Sensor,type=Sensor_Current_LTS15 HallVoltage=8      1618920865
+Sensor,type=Sensor_Voltage_Divider DivVoltage=13.0  1618920870
+
+  
+from(bucket: "emblem")
+  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+  |> filter(fn: (r) => r["_measurement"] == "pct")
+  |> filter(fn: (r) => r["_field"] == "SOC")
+  |> filter(fn: (r) => contains(value: r["device"], set: ${device:json}))
+  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)
+
+
+

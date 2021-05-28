@@ -1,0 +1,287 @@
+---
+
+# Configure Uberspace host with Influxdb and Grafana host 
+
+- name: Configure Uberspace host with Influxdb and Grafana host 
+  
+  hosts: uberspace-prod
+  tasks:
+    
+#Configuration based on https://lab.uberspace.de/guide_influxdb2.html
+
+    - name: Configure Influxd
+      copy:
+        content: |
+             http-bind-address = "0.0.0.0:8086"
+             log-level = "error"
+             reporting-disabled = true
+        dest: ~/etc/influxd.toml
+          
+    - name: Setup Influx Service
+      copy:
+        content: |
+             [program:influxd]
+             startsecs = 60
+             startretries = 0
+             environment = INFLUXD_CONFIG_PATH=%(ENV_HOME)s/etc/influxd.toml
+             command = influxd run
+        dest: ~/etc/services.d/influxd.ini
+      #http-auth-enables =ture
+
+    - name: Start Influx Service -> 1/3 Step Reread
+      shell: supervisorctl reread
+      register: output
+    - debug: var=output.stdout_lines
+    
+    - name: 2/3 Step Update Influx Service
+      shell: supervisorctl update
+      register: output
+    - debug: var=output.stdout_lines
+      
+    - name: 3/3 StepCheck if Influx Service is running 
+      shell: supervisorctl status
+      register: output
+    - debug: var=output.stdout_lines
+      
+# influx setup is not idempotence, thus it will fail on second run see: https://github.com/influxdata/influxdb/issues/20228
+#How to use influx setup https://docs.influxdata.com/influxdb/v2.0/reference/cli/influx/setup/
+#Problems the password seems to not be set correctly taking "" into account
+
+    - name: Initial Setup 
+      shell: influx setup -u "lsserver" -p F06YjFr4ZapmwmB-_. -o "LibreSolar" -b "LabjackCurrentVoltage" -r 0 -f -t 6O3aUzQNynIPhh1jwlNukYU1gx5Z2fJZNehpANlNl1rTtLsSW2Acm2rFE3mO81l2Fq_Nl8lyhqajg5ivOAzrvA==
+      ignore_errors: yes
+      register: output
+    - debug: var=output.stdout_lines
+       
+    #https://manual.uberspace.de/web-domains/?highlight=domains
+    - name: Register Domain for Outside Access
+      shell: uberspace web domain add influxdb.lsserver.uber.space
+      ignore_errors: yes
+      register: output
+    - debug: var=output.stdout_lines
+    
+    #https://manual.uberspace.de/web-backends/
+    - name: Enable Outside Access
+      shell: uberspace web backend set influxdb.lsserver.uber.space --http --port 8086
+      register: output
+    - debug: var=output.stdout_lines
+    
+    - name: Verify Outside Access 
+      shell: uberspace web backend list
+      register: output
+    - debug: var=output.stdout_lines
+    
+    
+#    - name: Test if InfluxDB Accepts connections 
+#      shell: curl -sL -I localhost:8086/ping
+#      register: output
+#    - debug: var=output.stdout_lines
+
+#    - name: Create sample database
+#      command: influxd -execute 'CREATE DATABASE sample_database'
+
+#    - name: Load some test data into sample database
+#  uri:
+#    url: https://localhost:8086/write?db=sample_database
+#    method: POST
+#    body: "random_ints,host=server_{{ 10 | random }} value={{ 100 | random }}"
+#    status_code: 204
+#  with_sequence: start=1 end=10
+    
+    
+    - name: Tell user Influx Setup was successfull.  
+      debug:
+        msg: The Influx setup has been setup sucessfully.       
+        
+#Configuration based on  https://lab.uberspace.de/guide_grafana.html?highlight=grafana  
+
+
+#Prerequisites
+ 
+  
+        
+    - name: Directory for storing the static files and default configuration
+      file:
+        path: ~/usr/share/grafana
+        state: directory
+      
+    - name: Directory for storing the log files
+      file:
+        path: ~/var/log/grafana
+        state: directory
+        
+    - name: Directory for storing the config file
+      file:
+        path: ~/etc/grafana
+        state: directory
+        
+    - name: Directory for storing bin 
+      file:
+        path: ~/bin
+        state: directory
+             
+             
+    - name: Create the mysql database for grafana
+      shell:  mysql -e "CREATE DATABASE lsserver_grafana"
+      ignore_errors: yes #Database will not be overwriten. 
+      
+#Installation
+    # previous version https://dl.grafana.com/oss/release/grafana-6.7.3.linux-amd64.tar.gz
+    - name: Download latest version of grafana
+      get_url: 
+        url: https://dl.grafana.com/oss/release/grafana-7.3.7.linux-amd64.tar.gz
+        dest: ~/
+    - unarchive: 
+        src: ~/grafana-7.3.7.linux-amd64.tar.gz
+        dest: ~/
+        remote_src: yes
+
+    - name: Move grafana-server 
+      copy: 
+        remote_src: yes 
+        src: ~/grafana-7.3.7/bin/grafana-server
+        dest: ~/bin
+        mode: 0755
+        follow: yes
+        
+    - name: Move grafana-cli 
+      copy: 
+        remote_src: yes 
+        src: ~/grafana-7.3.7/bin/grafana-cli
+        dest: ~/bin
+        mode: 0755
+        follow: yes
+        
+    - name:  Move conf  
+      copy: 
+        remote_src: yes 
+        src: ~/grafana-7.3.7/conf
+        dest: ~/usr/share/grafana 
+        follow: yes  
+        
+    - name:  Move public  
+      copy: 
+        remote_src: yes 
+        src:  ~/grafana-7.3.7/public 
+        dest: ~/usr/share/grafana 
+        follow: yes  
+           
+     
+    
+#Setup grafana
+
+
+    - name: Configure Grafana
+      copy:
+        content: |
+             [database]
+             type = mysql
+             host = 127.0.0.1:3306
+             name = lsserver_grafana
+             user = lsserver
+             # If the password contains # or ; you have to wrap it with triple quotes. Ex           """#password;"""
+             password = "g50XM_ePFNpr.iE484Q0"
+             [analytics]
+             reporting_enabled = false
+             check_for_updates = true
+             [security]
+             admin_user = lsserver
+             admin_password = F06YjFr4ZapmwmB-_.
+        dest: ~/etc/grafana/grafana.ini
+        
+     
+    - name: Register Domain for Outside Access
+      shell: uberspace web domain add grafana.lsserver.uber.space
+      ignore_errors: yes
+      register: output
+    - debug: var=output.stdout_lines
+     
+        
+    - name: Enable Outside Access
+      shell: uberspace web backend set grafana.lsserver.uber.space --http --port 3000
+      register: output
+    - debug: var=output.stdout_lines
+  
+#Additional Setup compared to Uberspace. 
+
+# TODO Configure Datasource (Influxdb) with configuration file
+# based on https://grafana.com/docs/grafana/latest/datasources/influxdb/
+    
+#    - name: Copy Datasource Configuration 
+#      copy: 
+#        src: location of configuration file on host? 
+#        dest: ~/bin/ location on deployment machine
+  
+        
+#Setup daemon/Service
+
+
+    - name: Setup Grafana Service
+      copy:
+        content: |
+             [program:grafana]
+             command=grafana-server -config %(ENV_HOME)s/etc/grafana/grafana.ini -homepath %(ENV_HOME)s/usr/share/grafana cfg:default.paths.logs=%(ENV_HOME)s/var/log/grafana
+             autostart=yes
+             autorestart=yes
+             startsecs=0
+        dest: ~/etc/services.d/grafana.ini
+#grafana-server -config %(ENV_HOME)s/etc/grafana/grafana.ini -homepath %(ENV_HOME)s/usr/share/grafana cfg:default.paths.logs=%(ENV_HOME)s/var/log/grafana     
+#for command line: grafana-server -config ~/etc/grafana/grafana.ini -homepath ~/usr/share/grafana cfg:default.paths.logs=~/var/log/grafana  
+      
+    - name: Start Grafana Service -> 1/3 Step Reread
+      shell: supervisorctl reread
+      register: output
+    - debug: var=output.stdout_lines
+    
+    - name: 2/3 Step Update Service Grafana
+      shell: supervisorctl update
+      register: output
+    - debug: var=output.stdout_lines
+      
+    - name: 3/3 StepCheck if Grafana Service is running 
+      shell: supervisorctl status
+      register: output
+    - debug: var=output.stdout_lines    
+    
+#    - supervisorctl:
+#    name: 'my_apps:'
+#    state: started
+#     
+  
+     
+  
+#Clean up
+    
+    - name: Clean up - Remove directory
+      file:
+        path: ~/grafana-7.3.7/
+        state: absent
+    - name: Clean up - Remove tar
+      file:
+        path: ~/grafana-7.3.7.linux-amd64.tar.gz
+        state: absent
+        
+# Verify Setup
+        
+    - name: Verify Outside Access 
+      shell: uberspace web backend list
+      register: output
+    - debug: var=output.stdout_lines
+    
+    - name: Check if grafana http page returns a status 200
+      uri:
+        url: https://lsserver.uber.space/login
+        return_content: yes       
+        
+#Implement an if condition if http check return it is setup secussfully    
+    
+    - name: Tell user Grafana Setup was successfull.  
+      debug:
+        msg: The Grafana setup has been setup sucessfully.    
+        
+        
+        
+        
+        
+        
+        

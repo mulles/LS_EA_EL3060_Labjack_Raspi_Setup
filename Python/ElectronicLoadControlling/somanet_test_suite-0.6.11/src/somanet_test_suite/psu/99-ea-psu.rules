@@ -1,0 +1,18 @@
+# Single Output
+# 42V
+SUBSYSTEM=="tty", ATTRS{product}=="PS 2042-06B", SYMLINK+="ea-ps-2042-06B-%n", ACTION=="add"
+SUBSYSTEM=="tty", ATTRS{product}=="PS 2042-10B", SYMLINK+="ea-ps-2042-10B-%n", ACTION=="add"
+SUBSYSTEM=="tty", ATTRS{product}=="PS 2042-20B", SYMLINK+="ea-ps-2042-20B-%n", ACTION=="add"
+# 84V
+SUBSYSTEM=="tty", ATTRS{product}=="PS 2084-03B", SYMLINK+="ea-ps-2084-03B-%n", ACTION=="add"
+SUBSYSTEM=="tty", ATTRS{product}=="PS 2084-05B", SYMLINK+="ea-ps-2084-05B-%n", ACTION=="add"
+SUBSYSTEM=="tty", ATTRS{product}=="PS 2084-10B", SYMLINK+="ea-ps-2084-10B-%n", ACTION=="add"
+
+
+# Triple Output
+# 42V
+SUBSYSTEM=="tty", ATTRS{product}=="PS 2342-06B", SYMLINK+="ea-ps-2342-06B-%n", ACTION=="add"
+SUBSYSTEM=="tty", ATTRS{product}=="PS 2342-10B", SYMLINK+="ea-ps-2342-10B-%n", ACTION=="add"
+# 84V
+SUBSYSTEM=="tty", ATTRS{product}=="PS 2384-03B", SYMLINK+="ea-ps-2384-03B-%n", ACTION=="add"
+SUBSYSTEM=="tty", ATTRS{product}=="PS 2384-05B", SYMLINK+="ea-ps-2384-05B-%n", ACTION=="add"

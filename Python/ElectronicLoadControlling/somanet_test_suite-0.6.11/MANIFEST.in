@@ -1,0 +1,5 @@
+include LICENSE requirements.txt
+global-exclude *.py[cod]
+global-include install.sh *.rules
+graft tests
+prune test_env

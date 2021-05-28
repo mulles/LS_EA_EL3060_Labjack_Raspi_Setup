@@ -1,0 +1,163 @@
+#!/usr/bin/env python3
+import sys
+import argparse
+import logging
+import datetime
+from somanet_test_suite.hardware_description_builder import build_hardware_description_json as hdb
+
+
+parser = argparse.ArgumentParser(description='Build the JSON stack description file for flashing stack info to the stack. Optionally add the --skip_flash argument to disable flashing to the board.')
+
+d_component = {"metavar": ('NAME', 'VERSION', 'SERIAL_NUMBER'),
+                    "required": False,
+                    "type": str,
+                    "nargs": 3,
+                    "action": 'append',
+                    "help": 'name, revision <letter>.<digit>, and serial number of a component'}
+
+parser.add_argument('-s', '--skip_flash',
+                    required=False,
+                    action='store_true',
+                    help='after creating the file, do not flash it to the device')
+
+parser.add_argument('-p', '--postfix',
+                    required=False,
+                    action='store_true',
+                    help='Append S/N to file name')
+
+parser.add_argument('-o', '--old_stack_info',
+                    required=False,
+                    action='store_true',
+                    help='Create deprecated stack_info.json')
+
+parser.add_argument('-hd', '--hardware_description',
+                    required=False,
+                    action='store_true',
+                    help='Create .hardware_description')
+
+parser.add_argument('-a', '--assembly',
+                    metavar=('SERIAL_NUMBER', 'NAME', 'ID', 'VERSION'),
+                    required=False,
+                    type=str,
+                    nargs=4,
+                    help='serial number, name, id, and version <letter>.<digit> of the assembly')
+
+parser.add_argument('-ac', '--assembly_components',
+                    **d_component)
+
+parser.add_argument('-d', '--device',
+                    #metavar=('SERIAL_NUMBER', 'MAC', 'NAME', 'ID', 'VERSION'),
+                    required=False,
+                    type=str,
+                    nargs='+',
+                    help='serial number, MAC address, [name, id, version <letter>.<digit>] of the device. You need all arguments for hardware_description')
+
+parser.add_argument('-dc', '--device_components',
+                    **d_component)
+
+
+args = parser.parse_args()
+
+if len(args.device) not in (2, 5):
+    parser.error('Wrong amount of arguments for "--device": "SERIAL_NUMBER", "MAC", ["NAME", "ID", "VERSION"]. You need all arguments for hardware_description')
+
+postfix = args.device[0] if args.postfix else None
+
+#
+# Configure the logger for both console and file output.
+#
+
+if not args.hardware_description and not args.old_stack_info:
+    args.hardware_description = True
+    args.old_stack_info = True
+
+if args.hardware_description:
+    build_hw = hdb.BuildHardwareDescription()
+
+    ch_console = logging.StreamHandler()
+    ch_file = logging.FileHandler(build_hw.file_name[1:] + "_" + args.device[0] + '.log')
+    logging.basicConfig(
+        format='[%(levelname)s] %(message)s',
+        level=logging.DEBUG,
+        handlers=[
+            ch_file,
+            ch_console
+        ])
+
+    logging.info("Started on " + str(datetime.date.today())
+                 + " at " + datetime.datetime.now().time().strftime("%H:%M:%S"))
+    logging.info("Logging to " + ch_file.baseFilename)
+
+    res_assembly = not args.assembly
+
+    if args.assembly:
+        res_assembly = build_hw.set_assembly(
+                name=args.assembly[1],
+                id=args.assembly[2],
+                version=args.assembly[3],
+                sn=args.assembly[0],
+                components=args.assembly_components,
+        )
+    res_device = build_hw.set_device(
+            name=args.device[2],
+            id=args.device[3],
+            version=args.device[4],
+            sn=args.device[0],
+            mac=args.device[1],
+            components=args.device_components
+    )
+
+    if res_assembly and res_device:
+        build_hw.generate(postfix)
+
+        if not args.skip_flash and not args.postfix:
+            build_hw.flash()
+        else:
+            logging.warning("The file was created but not flashed to the board. Remove the --skip_flash and the --timestamp argument if you want that.")
+
+
+if args.old_stack_info:
+    ch_console = logging.StreamHandler()
+    ch_file = logging.FileHandler("stack_info_" + args.device[0] + '.log')
+    logging.basicConfig(
+        format='[%(levelname)s] %(message)s',
+        level=logging.DEBUG,
+        handlers=[
+            ch_file,
+            ch_console
+        ])
+
+    logging.info('')
+    logging.info("####### DEPRECATED! PLEASE USE IN FUTURE HARDWARE_DESCRIPTION FILE ##############")
+    logging.info('')
+    logging.info("Started on " + str(datetime.date.today())
+                 + " at " + datetime.datetime.now().time().strftime("%H:%M:%S"))
+    logging.info("Logging to " + ch_file.baseFilename)
+
+    jinfo = hdb.JSONInfo(args.device[1], args.device[0], *args.device_components)
+    jinfo.generate(args.skip_flash, postfix)
+
+
+    # if not build_hw.set_assembly(
+    #     name="Schneider Integrated Motor",
+    #     id="SchneiderFLEX1850",
+    #     version=1,
+    #     sn="i0032044",
+    #     components= [
+    #      ["Duet.60.1,3.00.E1.1.E.0", "", "2206155"],
+    #  ]):
+    #     sys.exit(-1)
+    # if not build_hw.set_device(
+    #     name="SOMANET Servo Node 2000 EtherCAT",
+    #     id=9502,
+    #     version=1,
+    #     sn="9502-01-0004229-1925",
+    #     mac="40:49:8A:01:07:fc",
+    #     components= [
+    #     ["Com EtherCAT", "B.2", "1000-02-0007780-1923 "],
+    #     ["Core C2X", "A.5", "0500-02-0004438-1923"],
+    #     ["Drive 2000","E.1", "0004-01-0005060-1923"],
+    # ]):
+    #     sys.exit(-1)
+
+

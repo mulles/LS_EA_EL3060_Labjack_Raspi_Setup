@@ -1,0 +1,16 @@
+#https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html
+  #TODO can be adapted to .YAML, currently in .ini 
+
+[uberspace-test]
+lsservertest.uber.space
+
+[uberspace-prod]
+lsserver.uber.space
+
+[raspi-prod]
+lsserver.uber.space:40520 #the port is due to SSH Reverse Connection
+
+[raspi-test]
+192.168.0.12 # WLAN IP 
+
+

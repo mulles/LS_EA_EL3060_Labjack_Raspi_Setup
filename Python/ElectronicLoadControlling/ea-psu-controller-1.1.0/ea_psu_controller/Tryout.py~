@@ -1,0 +1,59 @@
+import serial
+
+
+#ser = serial.Serial(
+#    port = '/dev/ttyUSB0',
+#    baudrate = 57600, # instaed of 115200 
+#    parity = serial.PARITY_ODD,
+#    stopbits = serial.STOPBITS_ONE,
+#    bytesize = serial.EIGHTBITS,
+#    timeout=5, # IMPORTANT, can be lower or higher
+#    #inter_byte_timeout=0.1 # Alternative
+#    )
+
+print(ser.name)         # check which port was really used 
+print(ser.connect())    # return the transport and protocol instances.
+#byteData = ser.read(size=5) #Set size to something high
+
+#print(byteData)
+SEND = 0xC0 + 0x20 + 0x10
+RECEIVE = 0x40 + 0x20 + 0x10
+
+# Constant telegram messages
+GET_NAME = [RECEIVE, 0x0, 0x0]
+GET_SN   = [RECEIVE, 0x0, 0x1]
+
+STANDARD_HEADER = [SEND + 1, 0x0, 0x36]
+#            Header  Output Obj  Mask   Command
+REMOTE_ON = STANDARD_HEADER + [0x10, 0x10]
+n=
+print(bin(n).count("1"))
+
+for x in range(len(SEND)):
+    print(hex(SEND[x]))
+    
+#ser.close()
+    
+#def __calc_checksum(self, cmd):
+#  checksum = 0
+#  for byte in cmd_list:
+#      checksum += byte
+#  return self.__int_to_bytes(checksum, 2)
+
+#def __get_response(self, package):
+#  return package[3:-2]
+
+#def __tx_rx(self, cmd, expect_length):
+#  crc = self.__calc_checksum(cmd)
+#  output = self.__pack_list(cmd + crc)
+#  self.psu.write(output)
+#  time.sleep(0.005)
+#  num = 0
+#  t0 = time.time()
+#  while num < (expect_length+5):
+#      num = self.psu.inWaiting()
+#      if time.time() - t0 > 1:
+#          raise ExceptionTimeout('Didn\'t receive %d bytes in time.' % (expect_length+5))
+#  res = self.__get_response(self.psu.read(num))
+#  time.sleep(0.04)
+#  return res

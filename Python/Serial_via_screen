@@ -1,0 +1,363 @@
+################ PIO REMOTE ##########################################
+
+Topping / absorption voltage 14.4 V configurable
+Trickle charging 13.8 V configurable
+Load disconnect voltage 11.7 V configurable, current-compensated
+Load reconnect voltage 12.3 V configurable
+Temperature compensation-3 mV/K/cell configurable
+
+
+Documentation of commands: https://github.com/LibreSolar/charge-controller-firmware/blob/main/src/data_nodes.cpp
+
+ssh -t -p 40520 pi@lsserver.uber.space pio device monitor -b 115200 --echo -colorize
+
+cd /directory/to/platform.ini as it contains all the settings for the serial terminal.
+pio device monitor --echo  
+# echo is needed so you see the command you want to sent. 
+=pub/serial {"Enable":false}
+=pub/serial {"Enable":true}
+=input {"LoadEn":false}
+=input {"LoadEn":true}
+?input ["LoadEn"]
+=input {"DcdcEn":false}
+=input {"DcdcEn":true}
+?output ["Bat_V"]
+?conf ["BatNom_Ah"]
+=conf {"BatNom_Ah":12.0}
+?conf ["ToppingCutoff_A"]
+=conf {"ToppingCutoff_A:1.0"}
+=conf {"ToppingCutoff_A":1.0,"BatNom_Ah":12.0}
+
+
+# pressing ENTER-Key quick after. 
+
+?pub/
+?input/ get possible 
+?/
+
+Executing task in folder charge-controller-firmware: platformio run --target upload
+Executing task in folder charge-controller-firmware: pio remote run --target upload 
+
+
+
+--- Settings: socket://localhost:36647  115200,8,N,1
+--- RTS: active    DTR: active    BREAK: inactive
+--- CTS: active    DSR: active    RI: inactive  CD: active  
+--- software flow control: inactive
+--- hardware flow control: inactive
+--- serial input encoding: UTF-8
+--- serial output encoding: UTF-8
+--- EOL: CRLF
+--- filters: default
+
+
+  https://github.com/platformio/platformio-core/issues/3832
+https://docs.platformio.org/en/latest/core/userguide/remote/cmd_agent.html#pio-remote-agent-start
+
+
+
+Unhandled Error
+Traceback (most recent call last):
+  File "/home/mulles/.platformio/packages/contrib-pysite/twisted/python/log.py", line 103, in callWithLogger
+    return callWithContext({"system": lp}, func, *args, **kw)
+  File "/home/mulles/.platformio/packages/contrib-pysite/twisted/python/log.py", line 86, in callWithContext
+    return context.call({ILogContext: newCtx}, func, *args, **kw)
+  File "/home/mulles/.platformio/packages/contrib-pysite/twisted/python/context.py", line 122, in callWithContext
+    return self.currentContext().callWithContext(ctx, func, *args, **kw)
+  File "/home/mulles/.platformio/packages/contrib-pysite/twisted/python/context.py", line 85, in callWithContext
+    return func(*args,**kw)
+--- <exception caught here> ---
+  File "/home/mulles/.platformio/packages/contrib-pysite/twisted/internet/posixbase.py", line 614, in _doReadOrWrite
+    why = selectable.doRead()
+  File "/home/mulles/.platformio/packages/contrib-pysite/twisted/internet/tcp.py", line 243, in doRead
+    return self._dataReceived(data)
+  File "/home/mulles/.platformio/packages/contrib-pysite/twisted/internet/tcp.py", line 249, in _dataReceived
+    rval = self.protocol.dataReceived(data)
+  File "/home/mulles/env/env-LJM_Labjack/lib/python3.8/site-packages/platformio/commands/remote/client/device_monitor.py", line 33, in dataReceived
+    self.factory.send_to_server(data)
+  File "/home/mulles/env/env-LJM_Labjack/lib/python3.8/site-packages/platformio/commands/remote/client/device_monitor.py", line 68, in send_to_server
+    self.cdm.acwrite_data(data)
+  File "/home/mulles/env/env-LJM_Labjack/lib/python3.8/site-packages/platformio/commands/remote/client/device_monitor.py", line 218, in acwrite_data
+    self._acwrite_buffer += data
+builtins.TypeError: can only concatenate str (not "bytes") to str
+
+Exception in thread rx:
+Traceback (most recent call last):
+  File "/home/mulles/env/env-LJM_Labjack/lib/python3.8/site-packages/serial/urlhandler/protocol_socket.py", line 171, in read
+    raise SerialException('socket disconnected')
+serial.serialutil.SerialException: socket disconnected
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/lib/python3.8/threading.py", line 932, in _bootstrap_inner
+
+--- exit ---
+    self.run()
+  File "/usr/lib/python3.8/threading.py", line 870, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/mulles/env/env-LJM_Labjack/lib/python3.8/site-packages/serial/tools/miniterm.py", line 499, in reader
+    data = self.serial.read(self.serial.in_waiting or 1)
+  File "/home/mulles/env/env-LJM_Labjack/lib/python3.8/site-packages/serial/urlhandler/protocol_socket.py", line 178, in read
+    raise SerialException('read failed: {}'.format(e))
+serial.serialutil.SerialException: read failed: socket disconnected
+
+
+
+################  sudo screen /dev/ttyACM0 115200 ##########################################
+
+https://stackoverflow.com/questions/6539801/reminder-r-n-or-n-r
+
+sudo screen /dev/ttyACM0 115200
+
+?output \r\n
+Booting Zephyr OS build zephyr�*�*** Booting Zephyr OS build zephyr-v2.4.0-10-g4cb433db3f5c  ***
+Libre Solar Charge Controller: mppt_1210_hus
+�����������w��q��.updated, ThingSet result: 84
+Detected single battery (14.40 V max)
+
+
+
+
+
+�?�w��/e wndervoltage alert, ADC reading: 3696 limit: 9102
+
+DC/DCE: Low-side undervoltage alert, ADC reading: 3712 limit: 9102
+
+ buckE: Low-side undervoltage alert, ADC reading: 3712 limit: 910����?�w���������o�����}�� ADC reading: 3680 limit: 9102
+
+ starE: Low-side undervoltage alert, ADC reading: 3664 limit: 9102
+
+t (HVE: Low-side undervoltage alert, ADC reading: 3648 limit: 9102
+
+: 12.E: Low-sid�����������������������|[Z[Z�j
+
+56V,E: Low-side undervoltage alert, ADC reading: 3664 limit: 9102
+
+ LV: E: Low-side undervoltage alert, ADC reading: 3680 limit: 9102
+
+10.53E: Low-side undervoltage alert�*** BootZ�ڡ��?�*** Boot���������w����������ܿ�,,�"�f5c  ***
+Libre Solar Charge Controller: mppt_1210_hus
+EEPROM: Data objects read and updat�������w�����Detected single battery (14.40 V max)
+
+
+���/�
+
+  ������/�
+  
+  
+  
+pio remote run --target upload 
+Building project locally
+Processing mppt_1210_hus (board: mppt_1210_hus@0.7; framework: zephyr; platform: ststm32@~12.0.0)
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Verbose mode can be enabled via `-v, --verbose` option
+CONFIGURATION: https://docs.platformio.org/page/boards/ststm32/mppt_1210_hus@0.7.html
+PLATFORM: ST STM32 (12.0.0) > Libre Solar MPPT 1210 HUS
+HARDWARE: STM32L072RZ 32MHz, 20KB RAM, 192KB Flash
+DEBUG: Current (stlink) On-board (stlink) External (blackmagic, jlink)
+PACKAGES: 
+ - framework-zephyr 2.20500.0+sha.0a630c8 
+ - framework-zephyr-canopennode 0.0.0-alpha+sha.468d350028 
+ - framework-zephyr-civetweb 0.0.0-alpha+sha.e6903b80c0 
+ - framework-zephyr-cmsis 0.0.0-alpha+sha.c3bd2094f9 
+ - framework-zephyr-fatfs 0.0.0-alpha+sha.1d1fcc725a 
+ - framework-zephyr-hal-st 0.0.0-alpha+sha.b52fdbf4b6 
+ - framework-zephyr-hal-stm32 0.0.0-alpha+sha.cc8731dba4 
+ - framework-zephyr-libmetal 0.0.0-alpha+sha.9d4ee2c3cf 
+ - framework-zephyr-littlefs 0.0.0-alpha+sha.9e4498d1c7 
+ - framework-zephyr-loramac-node 0.0.0-alpha+sha.3f545d76a2 
+ - framework-zephyr-lvgl 0.0.0-alpha+sha.31acbaa36e 
+ - framework-zephyr-mbedtls 0.0.0-alpha+sha.24d84ecff1 
+ - framework-zephyr-mcuboot 0.0.0-alpha+sha.3fc59410b6 
+ - framework-zephyr-mcumgr 0.0.0-alpha+sha.43845e883f 
+ - framework-zephyr-mipi-sys-t 0.0.0-alpha+sha.75e671550a 
+ - framework-zephyr-open-amp 0.0.0-alpha+sha.de1b85a130 
+ - framework-zephyr-openthread 0.0.0-alpha+sha.1d668284a0 
+ - framework-zephyr-segger 0.0.0-alpha+sha.38c79a447e 
+ - framework-zephyr-sof 0.0.0-alpha+sha.b5b772dd61 
+ - framework-zephyr-tfm-mcuboot 1.7.0-rc1 
+ - framework-zephyr-tinycbor 0.0.0-alpha+sha.40daca97b4 
+ - framework-zephyr-tinycrypt 0.0.0-alpha+sha.3e9a49d267 
+ - framework-zephyr-trusted-firmware-m 0.0.0-alpha+sha.96340fb6c0 
+ - tool-cmake 3.16.4 
+ - tool-dtc 1.4.7 
+ - tool-gperf 3.0.4 
+ - tool-ninja 1.7.1 
+ - toolchain-gccarmnoneeabi 1.80201.181220 (8.2.1)
+LDF: Library Dependency Finder -> http://bit.ly/configure-pio-ldf
+LDF Modes: Finder ~ chain, Compatibility ~ soft
+Found 2 compatible libraries
+Scanning dependencies...
+Dependency Graph
+|-- <ThingSet> 0.2.0
+|-- <OledDisplay> 0.1.0
+Building in release mode
+Checking size .pio/build/mppt_1210_hus/firmware.elf
+Advanced Memory Usage is available via "PlatformIO Home > Project Inspect"
+RAM:   [=======   ]  67.8% (used 13883 bytes from 20480 bytes)
+Flash: [====      ]  38.1% (used 74998 bytes from 196608 bytes)
+========================================================================================= [SUCCESS] Took 1.10 seconds =========================================================================================
+
+Environment    Status    Duration
+-------------  --------  ------------
+mppt_1210_hus  SUCCESS   00:00:01.101
+========================================================================================= 1 succeeded in 00:00:01.101 =========================================================================================
+Uploading firmware remotely
+Processing mppt_1210_hus (board: mppt_1210_hus@0.7; framework: zephyr; platform: ststm32@~12.0.0)
+--------------------------------------------------------------------------------
+Tool Manager: Installing git+https://github.com/LibreSolar/zephyr#v2.5-branch
+Error: Traceback (most recent call last):
+  File "/home/pi/.local/lib/python3.7/site-packages/platformio/__main__.py", line 115, in main
+    cli()  # pylint: disable=no-value-for-parameter
+  File "/usr/local/lib/python3.7/dist-packages/click/core.py", line 829, in __call__
+    return self.main(*args, **kwargs)
+  File "/usr/local/lib/python3.7/dist-packages/click/core.py", line 782, in main
+    rv = self.invoke(ctx)
+  File "/home/pi/.local/lib/python3.7/site-packages/platformio/commands/__init__.py", line 44, in invoke
+    return super(PlatformioCLI, self).invoke(ctx)
+  File "/usr/local/lib/python3.7/dist-packages/click/core.py", line 1259, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+  File "/usr/local/lib/python3.7/dist-packages/click/core.py", line 1066, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/usr/local/lib/python3.7/dist-packages/click/core.py", line 610, in invoke
+    return callback(*args, **kwargs)
+  File "/usr/local/lib/python3.7/dist-packages/click/decorators.py", line 21, in new_func
+    return f(get_current_context(), *args, **kwargs)
+  File "/home/pi/.local/lib/python3.7/site-packages/platformio/commands/run/command.py", line 143, in cli
+    is_test_running,
+  File "/home/pi/.local/lib/python3.7/site-packages/platformio/commands/run/command.py", line 175, in process_env
+    result = {"env": name, "duration": time(), "succeeded": ep.process()}
+  File "/home/pi/.local/lib/python3.7/site-packages/platformio/commands/run/processor.py", line 68, in process
+    build_vars, build_targets, self.silent, self.verbose, self.jobs
+  File "/home/pi/.local/lib/python3.7/site-packages/platformio/platform/_run.py", line 60, in run
+    self.autoinstall_runtime_packages()
+  File "/home/pi/.local/lib/python3.7/site-packages/platformio/platform/_packages.py", line 74, in autoinstall_runtime_packages
+    self.pm.install(self.get_package_spec(name))
+  File "/home/pi/.local/lib/python3.7/site-packages/platformio/package/manager/_install.py", line 49, in install
+    spec, silent=silent, skip_dependencies=skip_dependencies, force=force
+  File "/home/pi/.local/lib/python3.7/site-packages/platformio/package/manager/_install.py", line 97, in _install
+    pkg = self.install_from_url(spec.url, spec, silent=silent)
+  File "/home/pi/.local/lib/python3.7/site-packages/platformio/package/manager/_install.py", line 141, in install_from_url
+    vcs = VCSClientFactory.new(tmp_dir, url)
+  File "/home/pi/.local/lib/python3.7/site-packages/platformio/package/vcsclient.py", line 55, in new
+    src_dir, remote_url, tag, silent
+  File "/home/pi/.local/lib/python3.7/site-packages/platformio/package/vcsclient.py", line 137, in __init__
+    self.configure()
+  File "/home/pi/.local/lib/python3.7/site-packages/platformio/package/vcsclient.py", line 146, in configure
+    result = proc.exec_command([cls.command, "--exec-path"])
+  File "/home/pi/.local/lib/python3.7/site-packages/platformio/proc.py", line 112, in exec_command
+    p = subprocess.Popen(*args, **kwargs)
+  File "/usr/lib/python3.7/subprocess.py", line 775, in __init__
+    restore_signals, start_new_session)
+  File "/usr/lib/python3.7/subprocess.py", line 1522, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: 'git': 'git'
+
+============================================================
+
+An unexpected error occurred. Further steps:
+
+* Verify that you have the latest version of PlatformIO using
+  `pip install -U platformio` command
+
+* Try to find answer in FAQ Troubleshooting section
+  https://docs.platformio.org/page/faq.html
+
+* Report this problem to the developers
+  https://github.com/platformio/platformio-core/issues
+
+============================================================
+
+
+
+
+
+
+***** worked ***** 
+
+
+Executing task in folder charge-controller-firmware: platformio run --target upload <
+
+Processing mppt_1210_hus (board: mppt_1210_hus@0.7; framework: zephyr; platform: ststm32@~12.0.0)
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Verbose mode can be enabled via `-v, --verbose` option
+CONFIGURATION: https://docs.platformio.org/page/boards/ststm32/mppt_1210_hus@0.7.html
+PLATFORM: ST STM32 (12.0.0) > Libre Solar MPPT 1210 HUS
+HARDWARE: STM32L072RZ 32MHz, 20KB RAM, 192KB Flash
+DEBUG: Current (stlink) On-board (stlink) External (blackmagic, jlink)
+PACKAGES: 
+ - framework-zephyr 2.20500.0+sha.0a630c8 
+ - framework-zephyr-canopennode 0.0.0-alpha+sha.468d350028 
+ - framework-zephyr-civetweb 0.0.0-alpha+sha.e6903b80c0 
+ - framework-zephyr-cmsis 0.0.0-alpha+sha.c3bd2094f9 
+ - framework-zephyr-fatfs 0.0.0-alpha+sha.1d1fcc725a 
+ - framework-zephyr-hal-st 0.0.0-alpha+sha.b52fdbf4b6 
+ - framework-zephyr-hal-stm32 0.0.0-alpha+sha.cc8731dba4 
+ - framework-zephyr-libmetal 0.0.0-alpha+sha.9d4ee2c3cf 
+ - framework-zephyr-littlefs 0.0.0-alpha+sha.9e4498d1c7 
+ - framework-zephyr-loramac-node 0.0.0-alpha+sha.3f545d76a2 
+ - framework-zephyr-lvgl 0.0.0-alpha+sha.31acbaa36e 
+ - framework-zephyr-mbedtls 0.0.0-alpha+sha.24d84ecff1 
+ - framework-zephyr-mcuboot 0.0.0-alpha+sha.3fc59410b6 
+ - framework-zephyr-mcumgr 0.0.0-alpha+sha.43845e883f 
+ - framework-zephyr-mipi-sys-t 0.0.0-alpha+sha.75e671550a 
+ - framework-zephyr-open-amp 0.0.0-alpha+sha.de1b85a130 
+ - framework-zephyr-openthread 0.0.0-alpha+sha.1d668284a0 
+ - framework-zephyr-segger 0.0.0-alpha+sha.38c79a447e 
+ - framework-zephyr-sof 0.0.0-alpha+sha.b5b772dd61 
+ - framework-zephyr-tfm-mcuboot 1.7.0-rc1 
+ - framework-zephyr-tinycbor 0.0.0-alpha+sha.40daca97b4 
+ - framework-zephyr-tinycrypt 0.0.0-alpha+sha.3e9a49d267 
+ - framework-zephyr-trusted-firmware-m 0.0.0-alpha+sha.96340fb6c0 
+ - tool-cmake 3.16.4 
+ - tool-dfuutil 1.9.200310 
+ - tool-dtc 1.4.7 
+ - tool-gperf 3.0.4 
+ - tool-ninja 1.7.1 
+ - tool-openocd 2.1000.200630 (10.0) 
+ - tool-stm32duino 1.0.1 
+ - toolchain-gccarmnoneeabi 1.80201.181220 (8.2.1)
+LDF: Library Dependency Finder -> http://bit.ly/configure-pio-ldf
+LDF Modes: Finder ~ chain, Compatibility ~ soft
+Found 2 compatible libraries
+Scanning dependencies...
+Dependency Graph
+|-- <ThingSet> 0.2.0
+|-- <OledDisplay> 0.1.0
+Building in release mode
+Checking size .pio/build/mppt_1210_hus/firmware.elf
+Advanced Memory Usage is available via "PlatformIO Home > Project Inspect"
+RAM:   [=======   ]  67.8% (used 13883 bytes from 20480 bytes)
+Flash: [====      ]  38.1% (used 74998 bytes from 196608 bytes)
+Configuring upload protocol...
+AVAILABLE: blackmagic, jlink, mbed, stlink
+CURRENT: upload_protocol = stlink
+Uploading .pio/build/mppt_1210_hus/firmware.elf
+xPack OpenOCD, x86_64 Open On-Chip Debugger 0.10.0+dev-00378-ge5be992df (2020-06-26-09:27)
+Licensed under GNU GPL v2
+For bug reports, read
+        http://openocd.org/doc/doxygen/bugs.html
+debug_level: 1
+
+srst_only separate srst_nogate srst_open_drain connect_deassert_srst
+
+target halted due to debug-request, current mode: Thread 
+xPSR: 0xf1000000 pc: 0x08008658 msp: 0x20003510
+STM32L0: Enabling HSI16
+** Programming Started **
+** Programming Finished **
+** Verify Started **
+** Verified OK **
+** Resetting Target **
+shutdown command invoked
+======================================================================================= [SUCCESS] Took 11.46 seconds =======================================================================================
+
+Environment    Status    Duration
+-------------  --------  ------------
+mppt_1210_hus  SUCCESS   00:00:11.456
+======================================================================================= 1 succeeded in 00:00:11.456 =======================================================================================
+
+
+
+

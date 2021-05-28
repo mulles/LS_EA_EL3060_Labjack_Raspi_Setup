@@ -1,0 +1,63 @@
+---
+
+#Configuration based on https://lab.uberspace.de/guide_influxdb2.html
+- name: Configure Uberspace host as Influxdb and Grafana host 
+  hosts: all
+  tasks:
+
+    - name: Get installed Influx Server Version for testing propuse
+      shell: influxd version
+      register: output
+    - debug: var=output.stdout_lines
+    
+    - name: Configure Influxd
+      ansible.builtin.copy:
+        content: |
+             http-bind-address = "0.0.0.0:8086"
+             log-level = "error"
+             reporting-disabled = true
+        dest: ~/etc/influxd.toml
+          
+    - name: Setup Service
+      ansible.builtin.copy:
+        content: |
+             [program:influxd]
+             startsecs = 60
+             startretries = 0
+             environment = INFLUXD_CONFIG_PATH=%(ENV_HOME)s/etc/influxd.toml
+             command = influxd run
+        dest: ~/etc/services.d/influxd.ini
+      
+
+    - name: Start Service -> 1/3 Step Reread
+      shell: supervisorctl reread
+      register: output
+    - debug: var=output.stdout_lines
+    
+    - name: 2/3 Step Update  Service
+      shell: supervisorctl update
+      register: output
+    - debug: var=output.stdout_lines
+      
+    - name: 3/3 StepCheck if Service is running 
+      shell: supervisorctl status
+      register: output
+    - debug: var=output.stdout_lines
+      
+  
+    - name: Initial Setup
+      shell: influx setup
+    
+    - name: Enable Outside Access
+      shell: uberspace web backend set / --http --port 8086
+       msg: The Influx has been setup sucessfully. 
+
+        
+        
+#  - name: Setup Service
+#      ansible.builtin.copy:
+#        src:  
+#        dest: ~/etc/services.d/influxd.ini
+#        owner: e1000 
+#        group: e1000 
+#        mode:  0755

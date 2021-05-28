@@ -1,0 +1,4 @@
+measurement,type=labjackT7 VoltageDivider=23.43 1556896326
+measurement,type=labjackT7 VoltageDivider=26.81 1556896323
+measurement,type=labjackT7 VoltageDivider=22.52 1556896335
+measurement,type=labjackT7 VoltageDivider=27.18 1556896336
