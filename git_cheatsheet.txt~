@@ -11,9 +11,6 @@ python/venv/
 *.retry
 *.*~
 
-#Exclude Git cheatsheet
-
-git_cheatsheet.txt
 
 # Exclude all binaries
 *.bin
