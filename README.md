@@ -25,7 +25,10 @@ This Repository contains two things, 1.IaC and 2.SOC Algo:
 2. Algorithm to calculate the SOC: 
    
    In development reside in /Python/ExtendedKalmanFilter/Plett_BMStoolbox_SOC_Est_SPKF.py 
-   
+   Create virtual environement (venv) and install dependencies:
+   python3 -m venv /path/to/new/virtual/environment (creat venv)
+   source <venv>/bin/activate (active venv)
+   pip3 install -r requirements.txt (install dependencies)
    
 The Code is structure in files and folders as follows:  
 
