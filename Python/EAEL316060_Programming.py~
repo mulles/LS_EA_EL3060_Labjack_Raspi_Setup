@@ -2,18 +2,6 @@ import serial
 import re
 import struct
 import time
-import requests
-
-# Resources: 
-# https://stackoverflow.com/questions/1592158/convert-hex-to-float
-
-influx_org = 'LibreSolar'
-influx_bucket = 'LabjackCurrentVoltage'
-influx_token = '6O3aUzQNynIPhh1jwlNukYU1gx5Z2fJZNehpANlNl1rTtLsSW2Acm2rFE3mO81l2Fq_Nl8lyhqajg5ivOAzrvA=='
-influx_url = f'https://influxdb.lsserver.uber.space/api/v2/write?org={influx_org}&bucket={influx_bucket}&precision=s'
-data = ""
-headers = {'Authorization': 'Token %s' % influx_token}
-device = "EA-EL-3060"
 
 ser = serial.Serial(
     port = '/dev/ttyUSB0',
@@ -60,7 +48,7 @@ print("Please the Data length of the object which you find in the list: ")
 # print("Telegram format to use/send with Cutecom")
 # print(' '.join('%02x'%i for i in telegram),"\n")
 
-while True:
+for x in range(0, 30):
     
     #Query object 71 (6 byte int, 3 words)
     OBJ = hex(71)
@@ -73,29 +61,23 @@ while True:
 
     
     # print("Length of data:", len(query_data))
-    # print("Checksum: ",hex(int(sum(query_data[0:len(query_data)-2]))), query_data[len(query_data)-2:len(query_data)].hex())
+    print("Checksum: ",hex(int(sum(query_data[0:len(query_data)-2]))), query_data[len(query_data)-2:len(query_data)].hex())
     # print("Received data in hex: ",[hex(x) for x in query_data])
     # print("Received data hex/ascii: ",query_data)
     # print("Received data in hex: ",query_data.hex())
 
     # print("Voltage in hex: ",query_data[3:len(query_data)-6].hex())
-    # print("Voltage scaled in int: ",int(query_data[3:len(query_data)-6].hex(),16)) 
-    Bat_V = int(query_data[3:len(query_data)-6].hex(),16)*160.0/25600             
-    # print("Voltage",Bat_V,"V \n")
+    # print("Voltage scaled in int: ",int(query_data[3:len(query_data)-6].hex(),16))
+    print("Voltage",int(query_data[3:len(query_data)-6].hex(),16)*160.0/25600,"V \n")
 
 
     # print("Current in hex : ",query_data[5:len(query_data)-4].hex())
     # print("Current scaled in int: ",int(query_data[5:len(query_data)-4].hex(),16))
-    Load_A = int(query_data[5:len(query_data)-4].hex(),16)*60.0/25600
-    # print("Current: ",Load_A,"A \n")
+    print("Current: ",int(query_data[5:len(query_data)-4].hex(),16)*60.0/25600,"A \n")
 
     # print("Power in hex",query_data[7:len(query_data)-2].hex())
     # print("Power scaled in int ",int(query_data[7:len(query_data)-2].hex(),16))
-    Load_W = int(query_data[7:len(query_data)-2].hex(),16)*400.0/25600
-    # print("Power: ",Load_W,"W \n")
-
-    data = f'V,device={device} Bat_V={Bat_V},Load_W={Load_W}\n' 
-    data += f'A,device={device} Load_A={Load_A}\n'
+    print("Power",int(query_data[7:len(query_data)-2].hex(),16)*400.0/25600,"W \n")
 
     #Query object 69 (4 byte float)
     OBJ = hex(69)
@@ -106,16 +88,9 @@ while True:
     ser.write(telegram)
     query_data = ser.read(size=data_length+5)
     
-    # print("Checksum: ",hex(int(sum(query_data[0:len(query_data)-2]))), query_data[len(query_data)-2:len(query_data)].hex())
+    print("Checksum: ",hex(int(sum(query_data[0:len(query_data)-2]))), query_data[len(query_data)-2:len(query_data)].hex())
     # print("CoulombCounter in Hex",query_data[3:len(query_data)-2].hex())
-    Dis_Ah, = struct.unpack('>f', query_data[3:7])
-    # print("CoulombCounter ",Dis_Ah,"Ah \n")
-    
-    data += f'Info,device={device} Dis_Ah={Dis_Ah}\n' 
-    print(data)
-    r = requests.post(influx_url, headers=headers, data=data)
-    print(r)  
-
+    print("CoulombCounter ",struct.unpack('>f', query_data[3:7]),"Ah \n")
     time.sleep(1 - time.monotonic() % 1) 
         
     # print("Reeived data: ",struct.unpack('f',query_data))
