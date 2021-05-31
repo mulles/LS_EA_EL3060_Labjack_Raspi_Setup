@@ -1,4 +1,8 @@
 
+# VSCode
+
+.vscode/*
+
 # Python
 *.pyc
 *.pyo
