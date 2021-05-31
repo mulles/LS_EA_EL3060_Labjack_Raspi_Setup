@@ -1,0 +1,10 @@
+#!/bin/sh
+'''exec' /home/mulles/Documents/2020_Documents/UNI/Master/Beuth_Berlin/Semester_4_SS2021_Masterarbeit/2021_LibreSolar/Software/LS_EA_EL3060_Labjack_Raspi_Setup/Python/venv/BatSOC/bin/python3 "$0" "$@"
+' '''
+# -*- coding: utf-8 -*-
+import re
+import sys
+from pip._internal.cli.main import main
+if __name__ == '__main__':
+    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
+    sys.exit(main())
