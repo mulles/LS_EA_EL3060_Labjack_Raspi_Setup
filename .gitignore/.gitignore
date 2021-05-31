@@ -2,7 +2,6 @@
 # Python
 *.pyc
 *.pyo
-python/venv/*
 
 # Ansible runtime and backups
 *.original
