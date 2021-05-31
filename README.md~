@@ -32,8 +32,8 @@ The Code is structure in files and folders as follows:
  -Raspberrypi-Provision_Raspi_PIO.yml (Configures Raspi an pulls the scripts from this Repo /Python folder (TODO write now manually copied, just systemd Service by Ansible).
  -Provision_PopOS_localhost.yml (configures my linux maschine to flash code on the STM32 onboard of MPPT-HUS-1210.
  -Provision_Uberspace_Influx.yml (configures a Linux-server (CentOS7) hosted by Uberspace.de running Influxdb (store the sensor data) and Grafana (to visualize the sensor data and do some simple caculations)  
- -hosts (tells you the IP adress of the machines which are to be configured)
- -ansible.cfg (the configuration for ansible used when running on my linux machine.)
+ -hosts tells you the IP adress of the machines which are to be configured
+ -ansible.cfg the configuration for ansible used when running on my linux machine.
  
  COULDDO use Ansible roles to stucture, modularize and abstract parts of Raspi and Uberspace provisioning.
  COULDDO automate Raspberry image building with docker image, instead of running ansible locally an raspberrypi. 
