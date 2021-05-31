@@ -1,6 +1,0 @@
-https://stackoverflow.com/questions/1611215/remove-a-git-commit-which-has-not-been-pushed
-
-git reset --hard HEAD^ (do untill you arrive at the commit you want to work with careful as all new changes will be delete)
-
-git rm -r --cached git_cheatsheet.txt (remove already tracked files before .gitignore change)
-
