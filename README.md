@@ -14,10 +14,11 @@ This Repository contains two things, 1.IaC and 2.SOC Algo:
    
    On the PI their are 4 scripts running:
    
-   1. Nucleo64Serial2Raspi2influxdb.py (Read A and V and general Info and writes it to InfluxDB)
+   1. measurement_Nucleo64Serial2Raspi2influxdb.py (Read A and V and general Info from MPPT-HUS-1210 and writes it to InfluxDB)
    2. Labjack2Raspi2influxdb.py (Reads A and V from sensors connected to LabjackT7 and writes it to influxDB
-   3. EAEL316060_Programming.py ( Reads Ah, A and V from the Electronic load the writes it to influxDB)
+   3. measurement_EA-EL-3060-2Serial2Raspi2Influxdb.py ( Reads Ah, A and V from the Electronic load the writes it to influxDB)
    4. TODO resides inside Ansible Raspberrypi-Provision_Raspi_PIO.yml file (Makes sure that WLAN automatically reconnects)
+   
    
    COULDDO All scripts are written currently in Procedural Code Style, some may or should be refactored to FP Style. 
 

@@ -14,10 +14,11 @@ This Repository contains two things, 1.IaC and 2.SOC Algo:
    
    On the PI their are 4 scripts running:
    
-   1. Nucleo64Serial2Raspi2influxdb.py (Read A and V and general Info and writes it to InfluxDB)
+   1. measurement_Nucleo64Serial2Raspi2influxdb.py (Read A and V and general Info from MPPT-HUS-1210 and writes it to InfluxDB)
    2. Labjack2Raspi2influxdb.py (Reads A and V from sensors connected to LabjackT7 and writes it to influxDB
-   3. EAEL316060_Programming.py ( Reads Ah, A and V from the Electronic load the writes it to influxDB)
+   3. measurement_EA-EL-3060-2Serial2Raspi2Influxdb.py ( Reads Ah, A and V from the Electronic load the writes it to influxDB)
    4. TODO resides inside Ansible Raspberrypi-Provision_Raspi_PIO.yml file (Makes sure that WLAN automatically reconnects)
+   
    
    COULDDO All scripts are written currently in Procedural Code Style, some may or should be refactored to FP Style. 
 
@@ -32,8 +33,8 @@ The Code is structure in files and folders as follows:
  -Raspberrypi-Provision_Raspi_PIO.yml (Configures Raspi an pulls the scripts from this Repo /Python folder (TODO write now manually copied, just systemd Service by Ansible).
  -Provision_PopOS_localhost.yml (configures my linux maschine to flash code on the STM32 onboard of MPPT-HUS-1210.
  -Provision_Uberspace_Influx.yml (configures a Linux-server (CentOS7) hosted by Uberspace.de running Influxdb (store the sensor data) and Grafana (to visualize the sensor data and do some simple caculations)  
- -hosts tells you the IP adress of the machines which are to be configured
- -ansible.cfg the configuration for ansible used when running on my linux machine.
+ -hosts (tells you the IP adress of the machines which are to be configured)
+ -ansible.cfg (the configuration for ansible used when running on my linux machine.)
  
  COULDDO use Ansible roles to stucture, modularize and abstract parts of Raspi and Uberspace provisioning.
  COULDDO automate Raspberry image building with docker image, instead of running ansible locally an raspberrypi. 

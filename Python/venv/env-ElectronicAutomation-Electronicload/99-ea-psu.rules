@@ -1,0 +1,3 @@
+SUBSYSTEM=="tty", ATTRS{idVendor}=="232e", ATTRS{idProduct}=="0010", SYMLINK+="ea-ps-20xx-xx-%n"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="232e", ATTRS{idProduct}=="0018", SYMLINK+="ea-ps-23xx-xx-%n"
+
