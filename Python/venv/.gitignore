@@ -1,0 +1,5 @@
+# Ignore any file in this directory except for this file 
+# Resource: https://stackoverflow.com/questions/17812717/correctly-ignore-all-files-recursively-under-a-specific-folder-except-for-a-spec
+*
+!/.gitignore
+
