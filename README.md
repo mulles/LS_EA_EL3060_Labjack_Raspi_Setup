@@ -48,6 +48,7 @@ The Code is structure in files and folders as follows:
 TODO Migrate this into an Ansible Vault
 
 TODO link/combine this Repo with LATEX Master Thesis Doc.
+TODO Add public links to Grafana as soon as repo is public
 COULDDO modularize this Repo into Ansible and Python Scripts at least  
  
 
