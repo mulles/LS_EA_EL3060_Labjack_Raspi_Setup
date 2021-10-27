@@ -45,11 +45,3 @@ The Code is structure in files and folders as follows:
 /Python folder contains all python scripts deployed and in developement: 
 
 **WARNING** This repository is not meant to be fully Open Sources yet, because it contains sensible data: f.i. Password to Servers and databases. 
-TODO Migrate this into an Ansible Vault
-
-TODO link/combine this Repo with LATEX Master Thesis Doc.
-TODO Add public links to Grafana as soon as repo is public
-COULDDO modularize this Repo into Ansible and Python Scripts at least  
- 
-
-
