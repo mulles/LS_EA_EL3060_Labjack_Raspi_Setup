@@ -2,7 +2,7 @@
 
 This Repository contains two things, 1.IaC and 2.SOC Algo:
 
-**1. Infrastucture to perform and verify current and voltage measurements on the battery connected to the MPTT-HUS-1210: **
+**1. Infrastucture to perform and verify current and voltage measurements on the battery connected to the MPTT-HUS-1210:**
    
    This infrastructure resides in at least 4 physical locations (Sensors inside and outside of MPPT-HUS-1210, RaspberryPi, Linux-Server) and is implemented via infrastructure as code (IaC).
    
@@ -22,7 +22,7 @@ This Repository contains two things, 1.IaC and 2.SOC Algo:
    
    COULDDO All scripts are written currently in Procedural Code Style, some may or should be refactored to FP Style. 
 
-**2. Algorithm to calculate the SOC: **
+**2. Algorithm to calculate the SOC:**
    
    In development reside in /Python/ExtendedKalmanFilter/Plett_BMStoolbox_SOC_Est_SPKF.py 
    Create virtual environement (venv) and install dependencies:
@@ -30,18 +30,19 @@ This Repository contains two things, 1.IaC and 2.SOC Algo:
    source <venv>/bin/activate (active venv)
    pip3 install -r requirements.txt (install dependencies)
    
-The Code is structure in files and folders as follows:  
+**The Code is structure in files and folders as follows:**
 
 /Ansible folder contains all Ansible Scripts to run for setting up the infrastucture: 
- -Raspberrypi-Provision_Raspi_PIO.yml (Configures Raspi an pulls the scripts from this Repo /Python folder (TODO write now manually copied, just systemd Service by Ansible).
- -Provision_PopOS_localhost.yml (configures my linux maschine to flash code on the STM32 onboard of MPPT-HUS-1210.
- -Provision_Uberspace_Influx.yml (configures a Linux-server (CentOS7) hosted by Uberspace.de running Influxdb (store the sensor data) and Grafana (to visualize the sensor data and do some simple caculations)  
- -hosts (tells you the IP adress of the machines which are to be configured)
- -ansible.cfg (the configuration for ansible used when running on my linux machine.)
+   
+ -Raspberrypi-Provision_Raspi_PIO.yml (Configures Raspi an pulls the scripts from this Repo /Python folder (TODO write now manually copied, just systemd Service     by Ansible).  
+ -Provision_PopOS_localhost.yml (configures my linux maschine to flash code on the STM32 onboard of MPPT-HUS-1210.  
+ -Provision_Uberspace_Influx.yml (configures a Linux-server (CentOS7) hosted by Uberspace.de running Influxdb (store the sensor data) and Grafana (to visualize     the sensor data and do some simple caculations)    
+ -hosts (tells you the IP adress of the machines which are to be configured)  
+ -ansible.cfg (the configuration for ansible used when running on my linux machine.)  
  
- COULDDO use Ansible roles to stucture, modularize and abstract parts of Raspi and Uberspace provisioning.
- COULDDO automate Raspberry image building with docker image, instead of running ansible locally an raspberrypi. 
+ COULDDO use Ansible roles to stucture, modularize and abstract parts of Raspi and Uberspace provisioning.  
+ COULDDO automate Raspberry image building with docker image, instead of running ansible locally an raspberrypi.     
 
-/Python folder contains all python scripts deployed and in developement: 
+/Python folder contains all python scripts deployed and in developement:   
 
 **WARNING** This repository is not meant to be fully Open Sources yet, because it contains sensible data: f.i. Password to Servers and databases. 
