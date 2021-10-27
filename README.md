@@ -2,7 +2,7 @@
 
 This Repository contains two things, 1.IaC and 2.SOC Algo:
 
-1. Infrastucture to perform and verify current and voltage measurements on the battery connected to the MPTT-HUS-1210: 
+**1. Infrastucture to perform and verify current and voltage measurements on the battery connected to the MPTT-HUS-1210: **
    
    This infrastructure resides in at least 4 physical locations (Sensors inside and outside of MPPT-HUS-1210, RaspberryPi, Linux-Server) and is implemented via infrastructure as code (IaC).
    
@@ -22,7 +22,7 @@ This Repository contains two things, 1.IaC and 2.SOC Algo:
    
    COULDDO All scripts are written currently in Procedural Code Style, some may or should be refactored to FP Style. 
 
-2. Algorithm to calculate the SOC: 
+**2. Algorithm to calculate the SOC: **
    
    In development reside in /Python/ExtendedKalmanFilter/Plett_BMStoolbox_SOC_Est_SPKF.py 
    Create virtual environement (venv) and install dependencies:
