@@ -2,7 +2,7 @@
 
 This Repository contains two things, 1.IaC and 2.SOC Algo:
 
-1. Infrastucture to do and verify current and voltage measurements on the battery connected to the MPTT-HUS-1210: 
+1. Infrastucture to perform and verify current and voltage measurements on the battery connected to the MPTT-HUS-1210: 
    
    This infrastructure resides in at least 4 physical locations (Sensors inside and outside of MPPT-HUS-1210, RaspberryPi, Linux-Server) and is implemented via infrastructure as code (IaC).
    
