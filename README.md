@@ -1,4 +1,4 @@
-# Battery testing laboratory infrastucture 
+# SoC Algo development battery testing laboratory infrastucture 
 
 
 **Infrastucture to charge and discharge a battery connected to the charge controller [MPTT-HUS-1210](https://github.com/LibreSolar/mppt-1210-hus), while monitoring current and voltage:**
