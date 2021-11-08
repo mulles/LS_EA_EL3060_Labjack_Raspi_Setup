@@ -4,7 +4,7 @@
 **Infrastucture to charge and discharge a battery connected to the charge controller [MPTT-HUS-1210](https://github.com/LibreSolar/mppt-1210-hus), while monitoring current and voltage:**
 
 
-![SOC_Setup](https://user-images.githubusercontent.com/13488510/139695457-870b3181-8af0-4463-a811-158720de3773.png)
+![SoC_Setup](https://user-images.githubusercontent.com/13488510/139695457-870b3181-8af0-4463-a811-158720de3773.png)
 
 
 ![IMG_20210402_150654](https://user-images.githubusercontent.com/13488510/139695525-7b8c8207-56b0-46ea-a0fc-d6cb0fe3aa57.jpg)
@@ -28,7 +28,7 @@ This infrastructure resides in 2 physical locations (Sensors inside and outside 
    
    COULDDO All scripts are written currently in Procedural Code Style, some may or should be refactored to FP Style. 
 
-[**Algorithm to calculate the SOC: ( moved to  https://github.com/mulles/kalman-soc/)** 
+[**Algorithm to calculate the SoC: ( moved to  https://github.com/mulles/kalman-soc/)** 
    
    TODO remove this section
    In development reside in /Python/ExtendedKalmanFilter/Plett_BMStoolbox_SOC_Est_SPKF.py 
