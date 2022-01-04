@@ -20,7 +20,7 @@ headers = {'Authorization': 'Token %s' % influx_token}
 
 labjack_current = 'AIN1'
 labjack_voltage = 'AIN2'
-interval_voltage_measurement = 60
+measurement_interval= 1
 
 # Open first found LabJack
 #handle = ljm.openS("ANY", "ANY", "ANY")  # Any device, Any connection, Any identifier
@@ -36,34 +36,26 @@ handle = ljm.openS("T7", "USB", "ANY")  # T7 device, Any connection, Any identif
 
 try:
     while True:
-        
-        
-        for i in range (interval_voltage_measurement):
+         
+ 
+        # Improvements: TODO put timestamp by labjack 
+        # Read Anlag Input ADC Adresses [AIN1] -> https://labjack.com/support/datasheets/t-series/ain
+        # read Serialnumber # Serialnumber = ljm.eReadName(handle, 'SERIAL_NUMBER')
      
-            # Improvements: TODO put timestamp by labjack 
-            # Read Anlag Input ADC Adresses [AIN1] -> https://labjack.com/support/datasheets/t-series/ain
-            # read Serialnumber # Serialnumber = ljm.eReadName(handle, 'SERIAL_NUMBER')
-         
-            Bat_current = ljm.eReadName(handle, labjack_current)
-            data = f'V,device=470023670 Bat_current={Bat_current}\n'
-            print(data)
-            r = requests.post(influx_url, headers=headers, data=data)
-            print(r)    
-         
-            time.sleep(1 - time.monotonic() % 1) 
-            #https://stackoverflow.com/questions/10813195/run-a-python-function-every-second
-      
-            
-        
-        ljm.eWriteName(handle, 'FIO0', 0) # Turn on relais for battery voltage measurement
-        time.sleep(0.5 - time.monotonic() % 1) 
+        Bat_current = ljm.eReadName(handle, labjack_current)
+        data = f'V,device=470023670 Bat_current={Bat_current}\n'
+        print(data)
+        r = requests.post(influx_url, headers=headers, data=data)
+        print(r)  
         Bat_voltage = ljm.eReadName(handle, labjack_voltage)
         data = f'V,device=470023670 Bat_voltage={Bat_voltage}\n'
         print(data)
         r = requests.post(influx_url, headers=headers, data=data)
-        print(r) 
-        ljm.eWriteName(handle, 'FIO0', 1) # Turn off relais for battery voltage measurement
-       
+        print(r)  
+     
+        time.sleep(measurement_interval - time.monotonic() % 1) 
+        #https://stackoverflow.com/questions/10813195/run-a-python-function-every-second
+                 
            
 except KeyboardInterrupt:
     print('While loop ended!') 
